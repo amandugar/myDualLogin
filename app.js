@@ -13,30 +13,36 @@ const app = express();
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({
-  extended: true
+	extended: true
 }));
 
 app.use(session({
-  secret: "Our little secret.",
-  resave: false,
-  saveUninitialized: false
+	secret: "Ardberry Technology",
+	resave: false,
+	saveUninitialized: false
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://localhost:27017/user1DB", { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect("mongodb://localhost:27017/user1DB", {
+	useNewUrlParser: true,
+	useUnifiedTopology: true
+});
 mongoose.set("useCreateIndex", true);
 
 const userSchema = new mongoose.Schema({
-  email: String,
-  username: String,
-  password: String
+	email: { type: String, },
+	username: String,
+	deviceName: String,
+	privateKey: String,
+	password: String
 });
 
 const agentSchema = new mongoose.Schema({
-  email: String,
-  password: String
+	email: String,
+	username: String,
+	password: String
 })
 
 userSchema.plugin(passportLocalMongoose);
@@ -55,97 +61,103 @@ passport.deserializeUser(User.deserializeUser());
 passport.deserializeUser(Agent.deserializeUser());
 
 app.get("/", function (req, res) {
-  res.render("home");
+	res.render("home");
 });
 
 app.get("/login", function (req, res) {
-  res.render("login");
+	res.render("login");
 });
 
 app.get("/register", function (req, res) {
-  res.render("register");
+	res.render("register");
 });
 
 app.get("/agentLogin", function (req, res) {
-  res.render("agentLogin");
+	res.render("agentLogin");
 });
 
 app.get("/agentRegister", function (req, res) {
-  res.render("agentRegister");
+	res.render("agentRegister");
 });
 
 app.get("/secrets", function (req, res) {
-  if (req.isAuthenticated()) {
-    res.render("secrets");
-  } else {
-    res.redirect("/login");
-  }
+	if (req.isAuthenticated()) {
+		res.render("secrets");
+	} else {
+		res.redirect("/login");
+	}
 });
 
 
 app.get("/logout", function (req, res) {
-  req.logout();
-  res.redirect("/");
+	req.logout();
+	res.redirect("/");
 });
 
 app.post("/register", function (req, res) {
-  User.register({ username: req.body.username }, req.body.password, function (err, user) {
-    if (err) {
-      console.log(err);
-      res.redirect("/register");
-    } else {
-      passport.authenticate("userLocal")(req, res, function () {
-        res.redirect("/secrets");
-      });
-    }
-  });
+	User.register({
+		username: req.body.username,
+		email: req.body.email,
+		privateKey: req.body.privateKey,
+		deviceName: req.body.deviceName
+	}, req.body.password, function (err, user) {
+		if (err) {
+			console.log(err);
+			res.redirect("/register");
+		} else {
+			res.redirect("/login");
+		}
+	});
 });
 
 app.post("/login", function (req, res) {
-  const user = new User({
-    username: req.body.username,
-    password: req.body.password
-  });
-  req.login(user, function (err) {
-    if (err) {
-      console.log(err);
-    } else {
-      passport.authenticate("local")(req, res, function () {
-        res.redirect("/secrets");
-      });
-    }
-  });
+	const user = new User({
+		username: req.body.username,
+		password: req.body.password
+	});
+	req.login(user, function (err) {
+		if (err) {
+			console.log(err);
+		} else {
+			passport.authenticate("local")(req, res, function () {
+				res.redirect("/secrets");
+			});
+		}
+	});
 });
 
 app.post("/agentRegister", function (req, res) {
-  Agent.register({ username: req.body.username }, req.body.password, function (err, user) {
-    if (err) {
-      console.log(err);
-      res.redirect("/register");
-    } else {
-      passport.authenticate("agentLocal")(req, res, function () {
-        res.send("Agent Login");
-      });
-    }
-  });
+	if (req.body.secretKey === "Ardberry@Technology#123") {
+		Agent.register({
+			username: req.body.username,
+			email: req.body.email
+		}, req.body.password, function (err, user) {
+			if (err) {
+				console.log(err);
+				res.redirect("/agentRegister");
+			} else {
+				res.redirect("/agentLogin")
+			}
+		});
+	}
 });
 
 app.post("/agentLogin", function (req, res) {
-  const agent = new Agent({
-    username: req.body.username,
-    password: req.body.password
-  });
-  req.login(agent, function (err) {
-    if (err) {
-      console.log(err);
-    } else {
-      passport.authenticate("agentLocal")(req, res, function () {
-        res.send("AGent Login")
-      });
-    }
-  });
+	const agent = new Agent({
+		username: req.body.username,
+		password: req.body.password
+	});
+	req.login(agent, function (err) {
+		if (err) {
+			console.log(err);
+		} else {
+			passport.authenticate("agentLocal")(req, res, function () {
+				res.render("agentPage")
+			});
+		}
+	});
 });
 
 app.listen(3000, function () {
-  console.log("Server started on port 3000.");
+	console.log("Server started on port 3000.");
 });
