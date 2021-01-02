@@ -1,0 +1,29 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 buttons" id="button-container">
+          <div class="row">
+            <% buttonsData.forEach(function(buttonData) { %>
+                <%  if(buttonData.buttonType === "button"){ %>
+                  <div class = "col-md-3">
+                    <label for="customRange1" class="form-label"><%= buttonData.buttonId%> <%= buttonData.buttonSerial%></label>
+                    <button type="button" class="btn btn-primary btn-lg">On</button>
+                    <button type="button" class="btn btn-primary btn-lg">Off</button>
+                  </div>
+                <% }%> 
+            <% }) %>
+          </div>  
+        </div>
+        <div class="col-md-12 slider" id="slider-container">
+          <div class="row">
+            <% buttonsData.forEach(function(buttonData) { %>
+                <%  if(buttonData.buttonType === "slider"){ %>
+                    <div class = "col-md-3">
+                    <label for="customRange1" class="form-label"><%= buttonData.buttonId%> <%= buttonData.buttonSerial%></label>
+                    <input type="range" class="form-range" id="customRange1">
+                    </div>
+                <% }%> 
+            <% }) %>
+          </div>  
+        </div>
+    </div>
+  </div>

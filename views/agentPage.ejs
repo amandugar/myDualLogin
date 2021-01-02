@@ -1,14 +1,58 @@
 <%- include('partials/header') %>
 
-<div class="jumbotron text-center">
-  <div class="container">
-    <i class="fas fa-key fa-6x"></i>
-    <h1 class="display-3">You've Discovered Agent Page</h1>
-    <p class="secret-text">Jack Bauer is my hero.</p>
-    <hr>
-    <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
-    <a class="btn btn-dark btn-lg" href="/submit" role="button">Submit a Secret</a>
+  <div class="jumbotron text-center">
+    <div class="container">
+      <i class="fas fa-key fa-6x"></i>
+      <h1 class="display-3">You've Discovered Agent Page</h1>
+      <p class="secret-text">Jack Bauer is my hero.</p>
+      <hr>
+      <a class="btn btn-light btn-lg" href="/logout" role="button">Log Out</a>
+      <a class="btn btn-dark btn-lg" href="/submit" role="button">Submit a Secret</a>
+    </div>
   </div>
-</div>
 
-<%- include('partials/footer') %>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <form action="/registerItem" method="post" >
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" placeholder="Username of The user"
+              required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Button Id</label>
+            <input type="text" class="form-control" id="buttonId" name="buttonId" placeholder="Button ID eg@ Light Fan"
+              required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Button Serial</label>
+            <input type="number" class="form-control" id="buttonSerial" name="buttonSerial"
+              placeholder="Serial Number of Id" required>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="buttonType" value="button" id="buttonForm" required>
+              <label class="form-check-label" for="flexRadioDefault1">
+                Button
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="buttonType" value="slider" id="sliderForm">
+              <label class="form-check-label" for="flexRadioDefault2">
+                Slider
+              </label>
+            </div>
+          </div>
+          <div class="mb-3" id="maxValue">
+            <label class="form-label">Max Value</label>
+            <input type="number" class="form-control" id="sliderMax" name="maxvalue"
+              placeholder="Max value of the device">
+          </div>
+          <button type="submit" class="btn btn-primary">Add new Item</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <%- include('partials/footer') %>

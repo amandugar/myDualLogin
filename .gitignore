@@ -80,4 +80,7 @@ typings/
 .dynamodb/
 
 node_modules
+#Confidential Data
 data
+
+.gitignore

@@ -7,6 +7,10 @@ const mongoose = require("mongoose");
 const session = require('express-session');
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
+const awsIot = require("aws-iot-device-sdk")
+const socket = require("socket.io");
+const http = require("http")
+let agentAuth = "";
 
 const app = express();
 
@@ -25,7 +29,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://localhost:27017/user1DB", {
+mongoose.connect("mongodb://localhost:27017/awsIotMultiUser", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true
 });
@@ -45,11 +49,20 @@ const agentSchema = new mongoose.Schema({
 	password: String
 })
 
+const buttonSchema = new mongoose.Schema({
+	username: String,
+	buttonType: String,
+	buttonId: String,
+	buttonSerial: Number,
+	maxValue: Number
+})
+
 userSchema.plugin(passportLocalMongoose);
 agentSchema.plugin(passportLocalMongoose);
 
 const User = new mongoose.model("User", userSchema);
 const Agent = new mongoose.model("Agent", agentSchema);
+const Button = new mongoose.model("Button", buttonSchema);
 
 passport.use('userLocal', User.createStrategy());
 passport.use('agentLocal', Agent.createStrategy());
@@ -80,9 +93,21 @@ app.get("/agentRegister", function (req, res) {
 	res.render("agentRegister");
 });
 
-app.get("/secrets", function (req, res) {
+app.get("/secrets/:username", function (req, res) {
 	if (req.isAuthenticated()) {
-		res.render("secrets");
+		Button.find({
+			username: req.params.username
+		}, function (err, data) {
+			if (err) {
+				console.log(err);
+			} else {
+				res.render("secrets",
+					{
+						buttonsData: data
+					}
+				)
+			}
+		})
 	} else {
 		res.redirect("/login");
 	}
@@ -120,7 +145,7 @@ app.post("/login", function (req, res) {
 			console.log(err);
 		} else {
 			passport.authenticate("local")(req, res, function () {
-				res.redirect("/secrets");
+				res.redirect(`/secrets/${req.body.username}`);
 			});
 		}
 	});
@@ -152,11 +177,42 @@ app.post("/agentLogin", function (req, res) {
 			console.log(err);
 		} else {
 			passport.authenticate("agentLocal")(req, res, function () {
-				res.render("agentPage")
+				agentAuth = req.body.username;
+				res.redirect(`/agent/${req.body.username}`)
 			});
 		}
 	});
 });
+
+app.get("/agent/:username", function (req, res) {
+	if (agentAuth === req.params.username) {
+
+		res.render("agentPage")
+	}
+	else {
+		res.send("Unauthorized");
+	}
+})
+
+app.post("/registerItem", function (req, res) {
+	const newButton = new Button({
+		username: req.body.username,
+		buttonType: req.body.buttonType,
+		buttonId: req.body.buttonId,
+		buttonSerial: req.body.buttonSerial,
+		maxValue: req.body.maxValue
+	})
+
+	newButton.save((err) => {
+		if (err) {
+			console.log(err);
+		}
+		else {
+			res.redirect(`/agent/${agentAuth}`)
+		}
+	})
+	console.log(req.body);
+})
 
 app.listen(3000, function () {
 	console.log("Server started on port 3000.");
