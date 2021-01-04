@@ -13,17 +13,12 @@ const http = require("http")
 const app = express();
 const server = http.createServer(app);
 const io = socket(server);
+
+let usernameAuthenticated;
+
 let agentAuth = "";
 
-let thingsShadow = awsIot.device({
-	keyPath: "data/0326bc11e5-private.pem.key",
-	certPath: "data/0326bc11e5-certificate.pem.crt",
-	caPath: "data/AmazonRootCA1.pem",
-	clientId: "esp8266",
-	host: "a1l34b8dami2sc-ats.iot.ap-south-1.amazonaws.com"
-})
-
-
+let thingsShadow;
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -47,16 +42,16 @@ mongoose.connect("mongodb://localhost:27017/awsIotMultiUser", {
 mongoose.set("useCreateIndex", true);
 
 const userSchema = new mongoose.Schema({
-	email: { type: String, },
-	username: String,
-	deviceName: String,
-	privateKey: String,
+	email: { type: String, unique: true },
+	username: { type: String, unique: true },
+	deviceName: { type: String, unique: true },
+	privateKey: { type: String, unique: true },
 	password: String
 });
 
 const agentSchema = new mongoose.Schema({
-	email: String,
-	username: String,
+	email: { type: String, unique: true },
+	username: { type: String, unique: true },
 	password: String
 })
 
@@ -105,7 +100,7 @@ app.get("/agentRegister", function (req, res) {
 });
 
 app.get("/secrets/:username", function (req, res) {
-	if (req.isAuthenticated()) {
+	if (req.isAuthenticated() && usernameAuthenticated === req.params.username && usernameAuthenticated !== " ") {
 		Button.find({
 			username: req.params.username
 		}, function (err, data) {
@@ -125,15 +120,11 @@ app.get("/secrets/:username", function (req, res) {
 							clientId: `${userData.deviceName}`,
 							host: "a1l34b8dami2sc-ats.iot.ap-south-1.amazonaws.com"
 						})
-						console.log(userData);
 					}
 				})
-				console.log(data);
-				res.render("secrets",
-					{
-						buttonsData: data
-					}
-				)
+				res.render("secrets", {
+					buttonsData: data
+				})
 			}
 		})
 	} else {
@@ -164,16 +155,19 @@ app.post("/register", function (req, res) {
 });
 
 app.post("/login", function (req, res) {
+	const username = req.body.username;
+	const password = req.body.password;
 	const user = new User({
-		username: req.body.username,
-		password: req.body.password
+		username: username,
+		password: password
 	});
 	req.login(user, function (err) {
 		if (err) {
 			console.log(err);
 		} else {
 			passport.authenticate("local")(req, res, function () {
-				res.redirect(`/secrets/${req.body.username}`);
+				usernameAuthenticated = username;
+				res.redirect(`/secrets/${username}`);
 			});
 		}
 	});
@@ -238,7 +232,6 @@ app.post("/registerItem", function (req, res) {
 			res.redirect(`/agent/${agentAuth}`)
 		}
 	})
-	console.log(req.body);
 })
 
 
@@ -250,20 +243,25 @@ function publishToTopicButton(data) {
 }
 
 function publishToTopicSlider(data) {
-	console.log(data);
+	thingsShadow.on('connect', function () {
+		thingsShadow.subscribe(data.username + 'slider');
+	})
+	thingsShadow.publish(data.username + 'slider', JSON.stringify(data));
 }
 
 io.on('connect', socket => {
 	socket.on('recieveButtonData', data => {
-		publishToTopicButton(data);
+		if (data.username === usernameAuthenticated) {
+			publishToTopicButton(data);
+		}
 	})
 
 	socket.on('recieveSliderData', data => {
-		publishToTopicSlider(data);
+		if (data.username === usernameAuthenticated) {
+			publishToTopicSlider(data);
+		}
 	})
 })
-
-
 
 server.listen(3000, function () {
 	console.log("Server started on port 3000.");
