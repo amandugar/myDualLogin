@@ -10,9 +10,20 @@ const passportLocalMongoose = require("passport-local-mongoose");
 const awsIot = require("aws-iot-device-sdk")
 const socket = require("socket.io");
 const http = require("http")
+const app = express();
+const server = http.createServer(app);
+const io = socket(server);
 let agentAuth = "";
 
-const app = express();
+let thingsShadow = awsIot.device({
+	keyPath: "data/0326bc11e5-private.pem.key",
+	certPath: "data/0326bc11e5-certificate.pem.crt",
+	caPath: "data/AmazonRootCA1.pem",
+	clientId: "esp8266",
+	host: "a1l34b8dami2sc-ats.iot.ap-south-1.amazonaws.com"
+})
+
+
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -101,6 +112,23 @@ app.get("/secrets/:username", function (req, res) {
 			if (err) {
 				console.log(err);
 			} else {
+				User.findOne({
+					username: req.params.username
+				}, function (err, userData) {
+					if (err) {
+						console.log(err);
+					} else {
+						thingsShadow = awsIot.device({
+							keyPath: `data/${userData.privateKey}-private.pem.key`,
+							certPath: `data/${userData.privateKey}-certificate.pem.crt`,
+							caPath: "data/AmazonRootCA1.pem",
+							clientId: `${userData.deviceName}`,
+							host: "a1l34b8dami2sc-ats.iot.ap-south-1.amazonaws.com"
+						})
+						console.log(userData);
+					}
+				})
+				console.log(data);
 				res.render("secrets",
 					{
 						buttonsData: data
@@ -186,7 +214,6 @@ app.post("/agentLogin", function (req, res) {
 
 app.get("/agent/:username", function (req, res) {
 	if (agentAuth === req.params.username) {
-
 		res.render("agentPage")
 	}
 	else {
@@ -200,7 +227,7 @@ app.post("/registerItem", function (req, res) {
 		buttonType: req.body.buttonType,
 		buttonId: req.body.buttonId,
 		buttonSerial: req.body.buttonSerial,
-		maxValue: req.body.maxValue
+		maxValue: req.body.maxvalue
 	})
 
 	newButton.save((err) => {
@@ -214,6 +241,30 @@ app.post("/registerItem", function (req, res) {
 	console.log(req.body);
 })
 
-app.listen(3000, function () {
+
+function publishToTopicButton(data) {
+	thingsShadow.on('connect', function () {
+		thingsShadow.subscribe(data.username + 'button');
+	})
+	thingsShadow.publish(data.username + 'button', JSON.stringify(data));
+}
+
+function publishToTopicSlider(data) {
+	console.log(data);
+}
+
+io.on('connect', socket => {
+	socket.on('recieveButtonData', data => {
+		publishToTopicButton(data);
+	})
+
+	socket.on('recieveSliderData', data => {
+		publishToTopicSlider(data);
+	})
+})
+
+
+
+server.listen(3000, function () {
 	console.log("Server started on port 3000.");
 });

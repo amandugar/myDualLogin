@@ -1,3 +1,5 @@
+const socket = io();
+
 let i = 1;
 let buttonType = "";
 const onIncorrect = `<div class="alert alert-warning alert-dismissible fade show" role="alert">Passwords Not Matching
@@ -33,3 +35,21 @@ $("#sliderForm").click(function () {
     $("#sliderMax").attr("name", "maxvalue");
     console.log(buttonType)
 })
+
+function sendButtonData(username, buttonId, buttonSerial, status) {
+    socket.emit('recieveButtonData', {
+        username,
+        buttonId,
+        buttonSerial,
+        status
+    })
+}
+
+function sendSliderData(username, buttonId, buttonSerial, currVal) {
+    socket.emit('recieveSliderData', {
+        username,
+        buttonId,
+        buttonSerial,
+        currVal
+    })
+}

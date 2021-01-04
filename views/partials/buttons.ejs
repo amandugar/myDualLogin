@@ -6,8 +6,8 @@
                 <%  if(buttonData.buttonType === "button"){ %>
                   <div class = "col-md-3">
                     <label for="customRange1" class="form-label"><%= buttonData.buttonId%> <%= buttonData.buttonSerial%></label>
-                    <button type="button" class="btn btn-primary btn-lg">On</button>
-                    <button type="button" class="btn btn-primary btn-lg">Off</button>
+                    <button type="button" class="btn btn-primary btn-lg" onclick = 'sendButtonData(`<%=buttonData.username%>`,`<%=buttonData.buttonId%>`,`<%=buttonData.buttonSerial%>`,"on")'>On</button>
+                    <button type="button" class="btn btn-primary btn-lg" onclick = 'sendButtonData(`<%=buttonData.username%>`,`<%=buttonData.buttonId%>`,`<%=buttonData.buttonSerial%>`,"off")'>Off</button>
                   </div>
                 <% }%> 
             <% }) %>
@@ -18,8 +18,8 @@
             <% buttonsData.forEach(function(buttonData) { %>
                 <%  if(buttonData.buttonType === "slider"){ %>
                     <div class = "col-md-3">
-                    <label for="customRange1" class="form-label"><%= buttonData.buttonId%> <%= buttonData.buttonSerial%></label>
-                    <input type="range" class="form-range" id="customRange1">
+                      <label for="customRange1" class="form-label"><%= buttonData.buttonId%> <%= buttonData.buttonSerial%></label>
+                      <input type="range" class="form-range" id='<%= buttonData.buttonId%><%= buttonData.buttonSerial%>' step = "1" min = "0" max = '<%=buttonData.maxValue%>' onchange = 'sendButtonData(`<%=buttonData.username%>`,`<%=buttonData.buttonId%>`,`<%=buttonData.buttonSerial%>`,this.value)'>
                     </div>
                 <% }%> 
             <% }) %>
