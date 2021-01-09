@@ -223,6 +223,14 @@ app.post("/registerItem", function (req, res) {
 		buttonSerial: req.body.buttonSerial,
 		maxValue: req.body.maxvalue
 	})
+	User.findOne({username: req.body.username},function(err){
+		if(err)
+		{
+			res.send("User not Found")
+		} else {
+
+		}
+	})
 
 	newButton.save((err) => {
 		if (err) {
@@ -246,6 +254,7 @@ function publishToTopicSlider(data) {
 	thingsShadow.on('connect', function () {
 		thingsShadow.subscribe(data.username + 'slider');
 	})
+	console.log(data);
 	thingsShadow.publish(data.username + 'slider', JSON.stringify(data));
 }
 

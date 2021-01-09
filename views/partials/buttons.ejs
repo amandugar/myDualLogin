@@ -19,7 +19,7 @@
                 <%  if(buttonData.buttonType === "slider"){ %>
                     <div class = "col-md-3">
                       <label for="customRange1" class="form-label"><%= buttonData.buttonId%> <%= buttonData.buttonSerial%></label>
-                      <input type="range" class="form-range" id='<%= buttonData.buttonId%><%= buttonData.buttonSerial%>' step = "1" min = "0" max = '<%=buttonData.maxValue%>' onchange = 'sendButtonData(`<%=buttonData.username%>`,`<%=buttonData.buttonId%>`,`<%=buttonData.buttonSerial%>`,this.value)'>
+                      <input type="range" class="form-range" id='<%= buttonData.buttonId%><%= buttonData.buttonSerial%>' step = "1" min = "0" max = '<%=buttonData.maxValue%>' onchange = 'sendSliderData(`<%=buttonData.username%>`,`<%=buttonData.buttonId%>`,`<%=buttonData.buttonSerial%>`,this.value)'>
                     </div>
                 <% }%> 
             <% }) %>
